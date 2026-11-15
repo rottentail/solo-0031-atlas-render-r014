@@ -2,7 +2,7 @@ package bundle
 
 import (
 	"atlas-render/internal/model"
-	"atlas-render/internal/persist"
+	"atlas-render/internal/snapshot"
 	"encoding/json"
 	"fmt"
 )
@@ -26,7 +26,7 @@ func Validate(p Package) error {
 	if model.CanonicalDigest(p.Snapshot) != p.Digest {
 		return model.Invalid("package checksum mismatch")
 	}
-	if e := persist.ValidateSnapshot(p.Snapshot); e != nil {
+	if e := snapshot.Verify(p.Snapshot); e != nil {
 		return e
 	}
 	return nil

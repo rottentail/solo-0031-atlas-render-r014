@@ -22,7 +22,7 @@
     },
     {
       "workflow_id": "import-asset",
-      "command": "python3 scripts/walkthrough.py --workflow import-asset"
+      "command": "python3 scripts/walkthrough.py --workflow import-asset && python3 scripts/ingress_parity.py"
     },
     {
       "workflow_id": "retire-asset",
@@ -58,7 +58,7 @@
     },
     {
       "workflow_id": "import-package",
-      "command": "python3 scripts/walkthrough.py --workflow import-package"
+      "command": "python3 scripts/walkthrough.py --workflow import-package && python3 scripts/ingress_parity.py"
     },
     {
       "workflow_id": "compare-renders",

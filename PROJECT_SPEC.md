@@ -25,7 +25,7 @@
 
 ## 模块与接口
 
-`internal/model` 定义实体、错误和摘要；`geometry` 负责矩阵；`paint` 负责采样；`scene` 校验文档和引用；`codec` 限制和编码 PNG；`raster` 编译并绘制；`persist` 独占打开、校验和提交；`service` 组织业务状态；`engine` 执行任务；`bundle` 负责交换格式；`observe` 提供像素与状态观察；`httpapi` 提供 HTTP 入口。具体工作流及跨模块路径见 `.project-manifest.json`。
+`internal/model` 定义实体、错误和摘要；`geometry` 负责矩阵；`paint` 负责采样；`scene` 校验文档和引用；`codec` 限制和编码 PNG；`asset` 定义素材接纳、内容身份、可用性和引用闭包；`snapshot` 冻结场景修订与素材闭包并校验快照；`raster` 编译并绘制；`persist` 独占打开、校验和提交；`service` 组织业务状态；`engine` 执行任务；`bundle` 负责交换格式；`observe` 提供像素与状态观察；`httpapi` 提供 HTTP 入口。直接素材上传和交换包导入都调用 `asset.Accept`/`asset.Admit`，快照冻结与快照校验都调用 `snapshot.Capture`/`snapshot.Verify`，服务层与交换层不再各自实现同名素材规则。具体工作流及跨模块路径见 `.project-manifest.json`。
 
 所有JSON请求拒绝未知字段与尾随第二个值，最多12 MiB；素材入口另限2 MiB。领域错误返回 JSON code/error；400输入不合法、404实体不存在、409状态或版本冲突、410结果已清理、429预算或队列不足。内部持久化错误对外返回500。
 

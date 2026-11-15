@@ -1,30 +1,27 @@
 package service
 
 import (
-	"atlas-render/internal/codec"
+	"atlas-render/internal/asset"
 	"atlas-render/internal/model"
-	"atlas-render/internal/scene"
 )
 
 func (s *Service) ImportAsset(id string, data []byte) (model.Asset, error) {
 	var out model.Asset
-	if !scene.ValidID(id) {
-		return out, model.Invalid("invalid asset id")
-	}
-	img, e := codec.Decode(data)
+	incoming, e := asset.Accept(id, data)
 	if e != nil {
 		return out, e
 	}
-	out = model.Asset{ID: id, Digest: model.Digest(data), State: "available", Width: img.Bounds().Dx(), Height: img.Bounds().Dy(), PNG: data}
 	e = s.Store.Update(func(st *model.State) error {
-		if old, ok := st.Assets[id]; ok {
-			if old.Digest == out.Digest && old.State == "available" {
-				out = old
-				return nil
-			}
+		existing, found := st.Assets[id]
+		admitted, store, e := asset.Admit(existing, found, incoming)
+		if e != nil {
 			return model.Conflict("asset id already exists")
 		}
-		st.Assets[id] = out
+		out = admitted
+		if !store {
+			return nil
+		}
+		st.Assets[id] = admitted
 		st.Emit("asset.imported", id)
 		return nil
 	})
@@ -36,12 +33,20 @@ func (s *Service) RetireAsset(id string) error {
 		if !ok {
 			return model.Missing("asset not found")
 		}
-		if a.State == "retired" {
+		retired, changed := asset.Retire(a)
+		if !changed {
 			return nil
 		}
-		a.State = "retired"
-		st.Assets[id] = a
+		st.Assets[id] = retired
 		st.Emit("asset.retired", id)
 		return nil
 	})
+}
+
+// assetLookup resolves assets inside one state transaction.
+func assetLookup(st *model.State) asset.Lookup {
+	return func(id string) (model.Asset, bool) {
+		a, ok := st.Assets[id]
+		return a, ok
+	}
 }

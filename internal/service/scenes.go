@@ -1,9 +1,12 @@
 package service
 
 import (
+	"atlas-render/internal/asset"
 	"atlas-render/internal/model"
 	"atlas-render/internal/persist"
 	"atlas-render/internal/scene"
+	"atlas-render/internal/snapshot"
+	"errors"
 	"strings"
 	"time"
 )
@@ -26,11 +29,8 @@ func (s *Service) PutScene(id, name string, expected int, d model.Document) (mod
 		if ok && old.State != "active" {
 			return model.Conflict("scene is archived")
 		}
-		for _, ref := range scene.References(d) {
-			a, ok := st.Assets[ref]
-			if !ok || a.State != "available" {
-				return model.Conflict("scene references unavailable asset")
-			}
+		if _, e := asset.ReferenceClosure(d, assetLookup(st)); e != nil {
+			return model.Conflict("scene references unavailable asset")
 		}
 		out = model.Scene{ID: id, Name: name, Revision: old.Revision + 1, State: "active", Document: d, UpdatedAt: time.Now().UTC()}
 		st.Scenes[id] = out
@@ -76,16 +76,14 @@ func (s *Service) Freeze(id string, expected int) (model.Snapshot, error) {
 		if v.Revision != expected || v.State != "active" {
 			return model.Conflict("scene revision or state changed")
 		}
-		assets := map[string]model.Asset{}
-		for _, ref := range scene.References(v.Document) {
-			a, ok := st.Assets[ref]
-			if !ok || a.State != "available" {
+		var e error
+		out, e = snapshot.Capture(model.ID("snap", st.Sequence+1), id, v.Revision, v.Document, assetLookup(st), time.Now().UTC())
+		if e != nil {
+			if errors.Is(e, asset.ErrUnavailable) {
 				return model.Conflict("snapshot references unavailable asset")
 			}
-			assets[ref] = a
+			return e
 		}
-		out = model.Snapshot{ID: model.ID("snap", st.Sequence+1), SceneID: id, Revision: v.Revision, State: "active", Document: v.Document, Assets: assets, CreatedAt: time.Now().UTC()}
-		out.Digest = model.SnapshotDigest(out)
 		st.Snapshots[out.ID] = out
 		st.Emit("snapshot.frozen", out.ID)
 		return nil

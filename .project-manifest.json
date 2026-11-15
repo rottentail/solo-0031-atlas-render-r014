@@ -29,6 +29,16 @@
       "responsibility": "PNG输入输出编码及尺寸限制"
     },
     {
+      "id": "asset",
+      "path": "internal/asset",
+      "responsibility": "素材接纳、内容身份、可用性和引用闭包"
+    },
+    {
+      "id": "snapshot",
+      "path": "internal/snapshot",
+      "responsibility": "快照冻结捕获与冻结内容校验"
+    },
+    {
       "id": "raster",
       "path": "internal/raster",
       "responsibility": "场景编译、裁剪链和逐像素合成"
@@ -126,6 +136,7 @@
       "module_ids": [
         "httpapi",
         "service",
+        "asset",
         "codec",
         "persist"
       ],
@@ -133,7 +144,7 @@
         "经公开HTTP入口完成领域转换",
         "通过存储或渲染结果观察已提交事实"
       ],
-      "verification": "python3 scripts/walkthrough.py --workflow import-asset"
+      "verification": "python3 scripts/walkthrough.py --workflow import-asset && python3 scripts/ingress_parity.py"
     },
     {
       "id": "retire-asset",
@@ -144,6 +155,7 @@
       "module_ids": [
         "httpapi",
         "service",
+        "asset",
         "persist",
         "raster"
       ],
@@ -162,6 +174,7 @@
       "module_ids": [
         "httpapi",
         "service",
+        "snapshot",
         "scene",
         "persist"
       ],
@@ -290,6 +303,7 @@
       "module_ids": [
         "httpapi",
         "service",
+        "asset",
         "bundle",
         "persist"
       ],
@@ -297,7 +311,7 @@
         "经公开HTTP入口完成领域转换",
         "通过存储或渲染结果观察已提交事实"
       ],
-      "verification": "python3 scripts/walkthrough.py --workflow import-package"
+      "verification": "python3 scripts/walkthrough.py --workflow import-package && python3 scripts/ingress_parity.py"
     },
     {
       "id": "compare-renders",
